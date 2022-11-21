@@ -812,22 +812,41 @@ namespace dmGameSystem
 
             }
 
+            // calculate coordinates of all 8 corners of the bounding cube. To find them we'll take all points P(Xi,Yj,Zk) i=boundsMin.x|boundsMax.x, j=boundsMin.y|boundsMax.y, k=boundsMin.z|boundsMax.z
+            // dmVMath::Point3 point1 = dmVMath::Point3(boundsMin.x, boundsMin.y, boundsMin.z) i.e. boundsMin
+            dmVMath::Point3 point2 = dmVMath::Point3(boundsMin.getX(), boundsMin.getY(), boundsMax.getZ());
+            dmVMath::Point3 point3 = dmVMath::Point3(boundsMin.getX(), boundsMax.getY(), boundsMin.getZ());
+            dmVMath::Point3 point4 = dmVMath::Point3(boundsMin.getX(), boundsMax.getY(), boundsMax.getZ());
+            dmVMath::Point3 point5 = dmVMath::Point3(boundsMax.getX(), boundsMin.getY(), boundsMin.getZ());
+            dmVMath::Point3 point6 = dmVMath::Point3(boundsMax.getX(), boundsMin.getY(), boundsMax.getZ());
+            dmVMath::Point3 point7 = dmVMath::Point3(boundsMax.getX(), boundsMax.getY(), boundsMin.getZ());
+            //dmVMath::Point3 point8 = dmVMath::Point3(boundsMax.x, boundsMax.y, boundsMax.z) i.e. boundsMax
 
-            // get center of bounding box in local coords
-            float center_x = (boundsMax.getX() + boundsMin.getX())/2;
-            float center_y = (boundsMax.getY() + boundsMin.getY())/2;
-            float center_z = (boundsMax.getZ() + boundsMin.getZ())/2;
-            dmVMath::Point3 center_local(center_x, center_y, center_z);
-            dmVMath::Point3 corner_local(boundsMax.getX(), boundsMax.getY(), boundsMax.getZ());
 
-            // transform to world coords
-            dmVMath::Vector4 center_world = component_p->m_World * center_local;
-            dmVMath::Vector4 corner_world = component_p->m_World * corner_local;
+            dmVMath::Point3 world_points[8];
 
-            float radius =  Vectormath::Aos::length(corner_world - center_world);
+            world_points[0] = Point3((component_p->m_World * boundsMin).getXYZ());
+            world_points[1] = Point3((component_p->m_World * point2).getXYZ());
+            world_points[2] = Point3((component_p->m_World * point3).getXYZ());
+            world_points[3] = Point3((component_p->m_World * point4).getXYZ());
+            world_points[4] = Point3((component_p->m_World * point5).getXYZ());
+            world_points[5] = Point3((component_p->m_World * point6).getXYZ());
+            world_points[6] = Point3((component_p->m_World * point7).getXYZ());
+            world_points[7] = Point3((component_p->m_World * boundsMax).getXYZ());
 
-            bool intersect = dmIntersection::TestFrustumSphere(frustum, center_world, radius, true);
+            bool intersect = false;
+            int point_i=0;
+            while ( point_i<8 && !intersect) {
+                intersect = dmIntersection::TestFrustumPoint(frustum, world_points[point_i], true); // TODO - check skip_near_far field. true or false ?
+
+                point_i ++;
+            }
+
             entry->m_Visibility = intersect ? dmRender::VISIBILITY_FULL : dmRender::VISIBILITY_NONE;
+            if (entry->m_Visibility == dmRender::VISIBILITY_NONE) {
+                dmLogError("culled!");
+            } else
+                dmLogError("NOT culled!");
         }
 
     }
