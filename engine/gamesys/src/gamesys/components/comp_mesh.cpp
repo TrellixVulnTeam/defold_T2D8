@@ -741,8 +741,10 @@ namespace dmGameSystem
     }
 
 
-    void metadataAabbToPoints(const void* data, dmBuffer::ValueType valueType, dmVMath::Point3& minPoint, dmVMath::Point3& maxPoint) {
-
+    template <typename T>
+    void metadataAabbToPoints(const T* data, dmBuffer::ValueType valueType, dmVMath::Point3& minPoint, dmVMath::Point3& maxPoint) {
+        minPoint = Point3(data[0], data[1], data[2]);
+        maxPoint = Point3(data[3], data[4], data[5]);
     }
 
     static void RenderListFrustumCulling(dmRender::RenderListVisibilityParams const &params)
@@ -776,7 +778,40 @@ namespace dmGameSystem
                 continue;
             }
 
-            metadataAabbToPoints(data, valueType, boundsMin, boundsMax);
+            switch (valueType) {
+                case dmBuffer::VALUE_TYPE_FLOAT32:
+                    metadataAabbToPoints((float*)data, valueType, boundsMin, boundsMax);
+                break;
+                case dmBuffer::VALUE_TYPE_UINT8:
+                    metadataAabbToPoints((uint8_t*)data, valueType, boundsMin, boundsMax);
+                break;
+                case dmBuffer::VALUE_TYPE_UINT16:
+                    metadataAabbToPoints((uint16_t*)data, valueType, boundsMin, boundsMax);
+                break;
+                case dmBuffer::VALUE_TYPE_UINT32:
+                    metadataAabbToPoints((uint32_t*)data, valueType, boundsMin, boundsMax);
+                break;
+                case dmBuffer::VALUE_TYPE_UINT64:
+                    metadataAabbToPoints((uint64_t*)data, valueType, boundsMin, boundsMax);
+                break;
+                case dmBuffer::VALUE_TYPE_INT8:
+                    metadataAabbToPoints((int8_t*)data, valueType, boundsMin, boundsMax);
+                break;
+                case dmBuffer::VALUE_TYPE_INT16:
+                    metadataAabbToPoints((int16_t*)data, valueType, boundsMin, boundsMax);
+                break;
+                case dmBuffer::VALUE_TYPE_INT32:
+                    metadataAabbToPoints((int32_t*)data, valueType, boundsMin, boundsMax);
+                break;
+                case dmBuffer::VALUE_TYPE_INT64:
+                    metadataAabbToPoints((int64_t*)data, valueType, boundsMin, boundsMax);
+                break;
+                default:
+                    dmLogError("Invalid typeValue in buffer metadata");
+                    continue;
+
+            }
+
 
             // get center of bounding box in local coords
             float center_x = (boundsMax.getX() + boundsMin.getX())/2;
